@@ -3,6 +3,11 @@ import requests
 
 app = Flask(__name__)
 
+# Root route to redirect to /redirect
+@app.route('/')
+def home():
+    return redirect('/redirect')
+
 @app.route('/redirect', methods=['GET'])
 def send_ip_and_redirect():
     # Get the real client IP address from the X-Forwarded-For header.
@@ -22,8 +27,8 @@ def send_ip_and_redirect():
 
     # Redirect the user to google.com
     target_url = "https://google.com"  # You can change this to any URL
-    return redirect('./redirect')
+    return redirect(target_url)
 
-# Remove the home route, so that accessing the root (/) doesn't return anything
+# Run the app
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
