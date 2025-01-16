@@ -1,1 +1,2 @@
-web: gunicorn Server:Server
+web: gunicorn server:app  
+worker: python client.py 
