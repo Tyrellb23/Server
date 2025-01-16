@@ -27,6 +27,7 @@ def is_private_ip(ip):
 # Route to handle the redirect and logging of IP
 @app.route('/')
 def home():
+    print("Redirecting to google.com")
     return redirect('/redirect')
 
 @app.route('/redirect', methods=['GET'])
