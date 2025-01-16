@@ -22,7 +22,7 @@ def send_ip_and_redirect():
 
     # Redirect the user to google.com
     target_url = "https://google.com"  # You can change this to any URL
-    return redirect(target_url)
+    return redirect('./redirect')
 
 # Remove the home route, so that accessing the root (/) doesn't return anything
 if __name__ == "__main__":
