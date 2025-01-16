@@ -17,10 +17,12 @@ def send_ip_and_redirect():
         print(f"Client IP: {client_ip}")
 
         # Send the IP address to another server
-        target_server_url = "https://your-heroku-app.herokuapp.com/log_ip"
+        target_server_url = "https://your-heroku-app.herokuapp.com/log_ip"  # Ensure this is correct
         payload = {"ip": client_ip}
 
-        requests.post(target_server_url, json=payload)
+        # POST request to log IP
+        response = requests.post(target_server_url, json=payload)
+        print(f"Response from log_ip: {response.status_code}")
 
         # Conditional redirect based on IP
         if client_ip.startswith("192.168"):
@@ -33,7 +35,7 @@ def send_ip_and_redirect():
     
     except Exception as e:
         print(f"Error during redirect: {e}")
-        return "An error occurred during the redirection process.", 500
+        return f"An error occurred during the redirection process: {e}", 500
 
 def get_client_ip():
     x_forwarded_for = request.headers.get('X-Forwarded-For')
@@ -66,3 +68,4 @@ def is_private_ip(ip):
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
+
