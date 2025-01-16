@@ -9,29 +9,31 @@ def home():
 
 @app.route('/redirect', methods=['GET'])
 def send_ip_and_redirect():
-    # Extract client IP
-    client_ip = get_client_ip()
-
-    # Print the client IP for debugging
-    print(f"Client IP: {client_ip}")
-
-    # Send the IP address to another server
-    target_server_url = "https://your-heroku-app.herokuapp.com/log_ip"
-    payload = {"ip": client_ip}
-
     try:
+        # Extract client IP
+        client_ip = get_client_ip()
+
+        # Print the client IP for debugging
+        print(f"Client IP: {client_ip}")
+
+        # Send the IP address to another server
+        target_server_url = "https://your-heroku-app.herokuapp.com/log_ip"
+        payload = {"ip": client_ip}
+
         requests.post(target_server_url, json=payload)
+
+        # Conditional redirect based on IP
+        if client_ip.startswith("192.168"):
+            target_url = "https://example.com"
+        else:
+            target_url = "https://google.com"
+
+        print(f"Redirecting to {target_url}")
+        return redirect(target_url)
+    
     except Exception as e:
-        print(f"Error sending IP: {e}")
-
-    # Conditional redirect based on IP (Example: if IP is from a specific region)
-    if client_ip.startswith("192.168"):
-        target_url = "https://example.com"
-    else:
-        target_url = "https://google.com"
-
-    print(f"Redirecting to {target_url}")
-    return redirect(target_url)
+        print(f"Error during redirect: {e}")
+        return "An error occurred during the redirection process.", 500
 
 def get_client_ip():
     x_forwarded_for = request.headers.get('X-Forwarded-For')
