@@ -1,42 +1,51 @@
+
 from flask import Flask, request, redirect
 import requests
+import time
 
 app = Flask(__name__)
 
+# Route to handle the redirect and logging of IP
 @app.route('/')
 def home():
     return redirect('/redirect')
 
 @app.route('/redirect', methods=['GET'])
 def send_ip_and_redirect():
+    # Extract client IP
+    client_ip = get_client_ip()
+
+    # Print the client IP for debugging
+    print(f"Client IP: {client_ip}")
+
+    # Send the IP address to another server
+    target_server_url = "https://your-heroku-app.herokuapp.com/log_ip"
+    payload = {"ip": client_ip}
+
     try:
-        # Extract client IP
-        client_ip = get_client_ip()
-
-        # Print the client IP for debugging
-        print(f"Client IP: {client_ip}")
-
-        # Send the IP address to another server
-        target_server_url = "https://your-heroku-app.herokuapp.com/log_ip"  # Ensure this is correct
-        payload = {"ip": client_ip}
-
-        # POST request to log IP
-        response = requests.post(target_server_url, json=payload)
-        print(f"Response from log_ip: {response.status_code}")
-
-        # Conditional redirect based on IP
-        if client_ip.startswith("192.168"):
-            target_url = "https://example.com"
-        else:
-            target_url = "https://google.com"
-
-        print(f"Redirecting to {target_url}")
-        return redirect(target_url)
-    
+        requests.post(target_server_url, json=payload)
     except Exception as e:
-        print(f"Error during redirect: {e}")
-        return f"An error occurred during the redirection process: {e}", 500
+        print(f"Error sending IP: {e}")
 
+    # Attempt to redirect until successful
+    target_url = "https://google.com"
+    max_attempts = 5  # Maximum retry attempts
+    delay = 2  # Delay between retries in seconds
+
+    for attempt in range(1, max_attempts + 1):
+        try:
+            print(f"Attempt {attempt}: Redirecting to {target_url}")
+            return redirect(target_url)
+        except Exception as e:
+            print(f"Redirect failed on attempt {attempt}: {e}")
+            if attempt < max_attempts:
+                time.sleep(delay)  # Wait before retrying
+
+    # If all attempts fail, return an error message
+    print("All redirect attempts failed.")
+    return "Failed to redirect after multiple attempts.", 500
+
+# Function to get client IP (you can adapt this to handle proxies)
 def get_client_ip():
     x_forwarded_for = request.headers.get('X-Forwarded-For')
     
@@ -50,6 +59,7 @@ def get_client_ip():
     else:
         return request.remote_addr
 
+# Function to check if the IP is a private IP
 def is_private_ip(ip):
     private_ip_ranges = [
         ("10.0.0.0", "10.255.255.255"),
