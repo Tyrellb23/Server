@@ -21,7 +21,7 @@ def send_ip_and_redirect():
         pass
 
     # Redirect the user to the target URL
-    target_url = "https://facebook.com"  # Replace with your target URL
+    target_url = "https://google.com"  # Replace with your target URL
     return redirect(target_url)
 
 if __name__ == "__main__":
