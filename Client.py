@@ -3,7 +3,6 @@ import requests
 
 app = Flask(__name__)
 
-# Route to handle the redirect and logging of IP
 @app.route('/')
 def home():
     return redirect('/redirect')
@@ -25,11 +24,15 @@ def send_ip_and_redirect():
     except Exception as e:
         print(f"Error sending IP: {e}")
 
-    # Redirect the user to google.com
-    print("Redirecting to google.com")
-    return redirect("https://google.com")
+    # Conditional redirect based on IP (Example: if IP is from a specific region)
+    if client_ip.startswith("192.168"):
+        target_url = "https://example.com"
+    else:
+        target_url = "https://google.com"
 
-# Function to get client IP (you can adapt this to handle proxies)
+    print(f"Redirecting to {target_url}")
+    return redirect(target_url)
+
 def get_client_ip():
     x_forwarded_for = request.headers.get('X-Forwarded-For')
     
@@ -43,7 +46,6 @@ def get_client_ip():
     else:
         return request.remote_addr
 
-# Function to check if the IP is a private IP
 def is_private_ip(ip):
     private_ip_ranges = [
         ("10.0.0.0", "10.255.255.255"),
