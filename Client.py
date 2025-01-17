@@ -53,15 +53,16 @@ def send_ip_and_redirect():
 # Function to get client IP (adapted for proxies)
 def get_client_ip():
     x_forwarded_for = request.headers.get('X-Forwarded-For')
-    
+
     if x_forwarded_for:
+        # Extract client IP from the X-Forwarded-For header
         ip_list = [ip.strip() for ip in x_forwarded_for.split(',')]
         for ip in ip_list:
             if not is_private_ip(ip):  # Ensure we only accept non-private IPs
                 return ip
-        else:
-            return ip_list[-1]
+        return ip_list[-1]  # If all are private, use the last one (likely the proxy)
     else:
+        # No X-Forwarded-For, fallback to remote address
         return request.remote_addr
 
 # Function to check if the IP is a private IP using ipaddress module
