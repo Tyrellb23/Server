@@ -24,18 +24,23 @@ def get_client_ip():
         # Iterate through each IP in the list to find the first non-private IP
         for ip in ip_list:
             if not is_private_ip(ip):
+                # Return the first non-private IP found in the list
                 print(f"Using public IP: {ip}")
                 return ip
         
-        # If all IPs are private, return the last one (which might be the proxy's IP)
-        # This ensures that we don’t fallback to the remote address unless necessary
-        print(f"All IPs in X-Forwarded-For are private. Returning the last IP: {ip_list[-1]}")
-        return ip_list[-1]
+        # If all IPs are private, return None (will prevent logging private IPs)
+        print("All IPs in X-Forwarded-For are private. Returning None.")
+        return None
     
-    # If no 'X-Forwarded-For' header is present, return a message or use the fallback
-    # For this case, we won't fall back to `request.remote_addr` unless absolutely needed.
-    print("No X-Forwarded-For header found. Unable to determine public IP.")
-    return None
+    # If no 'X-Forwarded-For' header is present, fallback to request.remote_addr
+    client_ip = request.remote_addr
+    if not is_private_ip(client_ip):
+        print(f"Using public IP: {client_ip}")
+        return client_ip
+    else:
+        # If the fallback IP is private, return None
+        print("Fallback IP is private. Returning None.")
+        return None
 
 @app.route('/log_ip', methods=['POST'])
 def log_ip():
@@ -45,14 +50,18 @@ def log_ip():
         client_ip = data.get("ip")
 
         if client_ip:
-            # Log the IP address to the console
-            print(f"Received IP Address: {client_ip}")
+            # Log the IP address to the console if it's public
+            if not is_private_ip(client_ip):
+                print(f"Received public IP Address: {client_ip}")
 
-            # Optionally save the IP address to a file
-            with open("received_ips.txt", "a") as file:
-                file.write(f"{client_ip}\n")
+                # Optionally save the IP address to a file
+                with open("received_ips.txt", "a") as file:
+                    file.write(f"{client_ip}\n")
 
-            return {"status": "success", "message": "IP logged successfully"}, 200
+                return {"status": "success", "message": "IP logged successfully"}, 200
+            else:
+                print(f"Received private IP Address: {client_ip}. Not logging.")
+                return {"status": "error", "message": "Private IP cannot be logged."}, 400
         else:
             return {"status": "error", "message": "No IP provided"}, 400
     except Exception as e:
@@ -63,11 +72,12 @@ def home():
     # Extract the real public IP address before redirecting
     client_ip = get_client_ip()
     
+    # Check if the IP is public and log it
     if client_ip:
         print(f"Client Public IP: {client_ip}")
     else:
-        print("Unable to determine client public IP.")
-
+        print("No valid public IP found.")
+    
     # Now redirect the user to Google
     return redirect("https://www.google.com")
 
