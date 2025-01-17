@@ -59,8 +59,10 @@ def get_client_ip():
         ip_list = [ip.strip() for ip in x_forwarded_for.split(',')]
         for ip in ip_list:
             if not is_private_ip(ip):  # Ensure we only accept non-private IPs
+                print(f"Found public IP: {ip}")
                 return ip
-        return ip_list[-1]  # If all are private, use the last one (likely the proxy)
+        # If no public IP is found, return the last IP (likely the proxy itself)
+        return ip_list[-1]
     else:
         # No X-Forwarded-For, fallback to remote address
         return request.remote_addr
