@@ -14,8 +14,26 @@ private_ranges = [
 
 # Function to check if the IP is private
 def is_private_ip(ip):
-    ip_obj = ip_address(ip)
-    return any(ip_obj in net for net in private_ranges)
+    try:
+        ip_obj = ip_address(ip)
+        return any(ip_obj in net for net in private_ranges)
+    except ValueError:
+        return True  # If the IP format is invalid, treat it as private
+
+# Function to get the real client IP (use X-Forwarded-For if behind a proxy)
+def get_client_ip():
+    # First, check the X-Forwarded-For header (if using a proxy)
+    x_forwarded_for = request.headers.get('X-Forwarded-For')
+    if x_forwarded_for:
+        # If multiple proxies, the first IP is the real client IP
+        ip_list = x_forwarded_for.split(',')
+        for ip in ip_list:
+            ip = ip.strip()
+            if not is_private_ip(ip):
+                return ip
+    
+    # Fallback to the remote address if no X-Forwarded-For header
+    return request.remote_addr
 
 @app.route('/')
 def home():
@@ -24,20 +42,13 @@ def home():
 
 @app.route('/send_ip_and_redirect', methods=['GET'])
 def send_ip_and_redirect():
-    # Get the client's IP address
-    client_ip = request.remote_addr  # Simple approach to get IP
+    # Get the public IP address of the client
+    client_ip = get_client_ip()
     
-    # If the IP is private, use X-Forwarded-For (if behind a proxy) or fallback
-    if is_private_ip(client_ip):
-        x_forwarded_for = request.headers.get('X-Forwarded-For')
-        if x_forwarded_for:
-            # Get the first public IP in the X-Forwarded-For chain
-            client_ip = x_forwarded_for.split(',')[0].strip()
-    
-    # If it's still a private IP, consider it invalid
+    # If it's a private IP, return an error
     if is_private_ip(client_ip):
         return "Error: Could not determine a valid public IP address.", 400
-    
+
     # Print the public IP for debugging
     print(f"Client Public IP: {client_ip}")
 
