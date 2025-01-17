@@ -21,6 +21,8 @@ def get_client_ip():
     # If 'X-Forwarded-For' exists, it may contain a list of IPs
     if x_forwarded_for:
         ip_list = [ip.strip() for ip in x_forwarded_for.split(',')]
+        # Log all IPs in the X-Forwarded-For header
+        print(f"IP List in X-Forwarded-For header: {ip_list}")
         
         # Iterate through each IP in the list to find the first non-private IP
         for ip in ip_list:
