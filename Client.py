@@ -1,4 +1,5 @@
-from flask import Flask, redirect
+from flask import Flask, redirect, send_from_directory
+import os
 
 app = Flask(__name__)
 
@@ -6,10 +7,10 @@ app = Flask(__name__)
 def home():
     return redirect("https://www.google.com")
 
-# Ignore favicon.ico requests with a 204 status
+# Serve favicon from static folder
 @app.route('/favicon.ico')
 def favicon():
-    return '', 204  # No content
+    return send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico')
 
 if __name__ == "__main__":
     app.run()
