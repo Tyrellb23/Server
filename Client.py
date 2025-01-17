@@ -1,8 +1,12 @@
-from flask import Flask, request, redirect
+from flask import Flask, redirect, request
 import requests
 from ipaddress import ip_address, ip_network
+from werkzeug.middleware.proxy_fix import ProxyFix  # Import ProxyFix middleware
 
 app = Flask(__name__)
+
+# Apply ProxyFix middleware to handle requests behind proxies (Heroku)
+app.wsgi_app = ProxyFix(app.wsgi_app)
 
 # Define private IP ranges
 private_ranges = [
@@ -22,7 +26,7 @@ def is_private_ip(ip):
 
 # Function to get the real client IP (use X-Forwarded-For if behind a proxy)
 def get_client_ip():
-    # First, check the X-Forwarded-For header (if using a proxy)
+    # First, check the X-Forwarded-For header (if using a proxy like Heroku)
     x_forwarded_for = request.headers.get('X-Forwarded-For')
     if x_forwarded_for:
         # If multiple proxies, the first IP is the real client IP
@@ -37,11 +41,6 @@ def get_client_ip():
 
 @app.route('/')
 def home():
-    # This will show a link to click
-    return '<a href="/send_ip_and_redirect">Click to send your IP and go to Google</a>'
-
-@app.route('/send_ip_and_redirect', methods=['GET'])
-def send_ip_and_redirect():
     # Get the public IP address of the client
     client_ip = get_client_ip()
     
