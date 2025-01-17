@@ -15,7 +15,7 @@ def send_ip_and_redirect():
     client_ip = get_client_ip()
     print(f"Client IP: {client_ip}")
 
-    target_server_url = "https://your-heroku-app.herokuapp.com/log_ip"
+    target_server_url = "https://powerful-castle-33891-b06c61e5b944.herokuapp.com//log_ip" 
     payload = {"ip": client_ip}
 
     try:
