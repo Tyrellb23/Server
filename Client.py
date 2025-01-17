@@ -3,6 +3,18 @@ import requests
 import time
 from ipaddress import ip_address, ip_network
 
+
+app_cli = AppGroup('app')
+
+@app_cli.command('routes')
+def list_routes():
+    for rule in app.url_map.iter_rules():
+        print(f"{rule.endpoint} -> {rule.methods} -> {rule.rule}")
+
+app.cli.add_command(app_cli)
+
+
+
 app = Flask(__name__)
 
 @app.route('/')
