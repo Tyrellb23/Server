@@ -1,3 +1,4 @@
+
 import os
 from flask import Flask, request, redirect
 import ipaddress
@@ -25,7 +26,7 @@ def get_client_ip():
         for ip in ip_list:
             if not is_private_ip(ip):
                 # Return the first non-private IP found in the list
-                print(f"Using public IP: {ip}")
+                print(f"Using public IP from X-Forwarded-For: {ip}")
                 return ip
         
         # If all IPs are private, return None (will prevent logging private IPs)
