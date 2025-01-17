@@ -12,22 +12,30 @@ def is_private_ip(ip):
     except ValueError:
         return True  # If the IP format is invalid, treat it as private
 
-# Helper function to extract the real client IP
+# Helper function to extract the real client IP from headers (supporting proxies)
 def get_client_ip():
+    # Check for 'X-Forwarded-For' header which may contain multiple IP addresses
     x_forwarded_for = request.headers.get('X-Forwarded-For')
-    
+
+    # If 'X-Forwarded-For' exists, it may contain a list of IPs
     if x_forwarded_for:
-        # X-Forwarded-For can contain a list of IPs, so we get the first one
         ip_list = [ip.strip() for ip in x_forwarded_for.split(',')]
+        
+        # Iterate through each IP in the list to find the first non-private IP
         for ip in ip_list:
-            # Check if it's not a private IP
             if not is_private_ip(ip):
+                print(f"Using public IP: {ip}")
                 return ip
-        # If all are private IPs, return None (indicating no valid public IP was found)
-        return None
-    else:
-        # If no X-Forwarded-For header, return None for now
-        return None
+        
+        # If all IPs are private, return the last one (which might be the proxy's IP)
+        # This ensures that we don’t fallback to the remote address unless necessary
+        print(f"All IPs in X-Forwarded-For are private. Returning the last IP: {ip_list[-1]}")
+        return ip_list[-1]
+    
+    # If no 'X-Forwarded-For' header is present, return a message or use the fallback
+    # For this case, we won't fall back to `request.remote_addr` unless absolutely needed.
+    print("No X-Forwarded-For header found. Unable to determine public IP.")
+    return None
 
 @app.route('/log_ip', methods=['POST'])
 def log_ip():
@@ -52,26 +60,16 @@ def log_ip():
 
 @app.route('/')
 def home():
-    max_attempts = 5  # Maximum number of retry attempts
-    delay = 2  # Delay in seconds between retries
+    # Extract the real public IP address before redirecting
+    client_ip = get_client_ip()
     
-    for attempt in range(max_attempts):
-        # Log the real public IP address before doing the redirect
-        client_ip = get_client_ip()
-        
-        if client_ip:
-            print(f"Found Public IP: {client_ip}")
-            # Now redirect the user to Google
-            return redirect("https://www.google.com")
-        
-        # If no valid public IP was found, retry after the delay
-        print(f"Attempt {attempt + 1}: No valid public IP found. Retrying...")
-        
-        if attempt < max_attempts - 1:
-            time.sleep(delay)  # Wait before retrying
-    
-    # If no valid public IP found after retries, return an error
-    return "Error: Could not determine a valid public IP address.", 400
+    if client_ip:
+        print(f"Client Public IP: {client_ip}")
+    else:
+        print("Unable to determine client public IP.")
+
+    # Now redirect the user to Google
+    return redirect("https://www.google.com")
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))  # Default to 5000 if PORT is not set
