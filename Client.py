@@ -2,7 +2,8 @@ import requests
 import json
 
 # Server URL to send the IP address
-SERVER_URL = "http://your-server-url/log_ip"
+SERVER_URL ="https://powerful-castle-33891-b06c61e5b944.herokuapp.com/
+/log_ip"
 
 def get_public_ip():
     """
